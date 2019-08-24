@@ -61,7 +61,7 @@ namespace triaxis.AspNetCore.ReverseProxy
         /// </summary>
         static readonly Dictionary<string, (HttpMethod method, bool hasContent)> s_methodMap = new Dictionary<string, (HttpMethod method, bool hasContent)>(StringComparer.OrdinalIgnoreCase)
         {
-            [HttpMethods.Delete] = (HttpMethod.Delete, false),
+            [HttpMethods.Delete] = (HttpMethod.Delete, true),
             [HttpMethods.Get] = (HttpMethod.Get, false),
             [HttpMethods.Head] = (HttpMethod.Head, false),
             [HttpMethods.Options] = (HttpMethod.Options, false),
@@ -149,9 +149,12 @@ namespace triaxis.AspNetCore.ReverseProxy
 
                 // content headers must be added to the content object,
                 // adding them to request.Headers throws an exception
-                if (content && header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
+                if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
                 {
-                    message.Content.Headers.Add(header.Key, (IEnumerable<string>)header.Value);
+                    if (content)
+                    {
+                        message.Content.Headers.Add(header.Key, (IEnumerable<string>)header.Value);
+                    }
                 }
                 else
                 {
