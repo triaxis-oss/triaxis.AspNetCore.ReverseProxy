@@ -1,0 +1,38 @@
+name: publish nuget
+on:
+  push:
+    branches:
+      - master # Default release branch
+
+defaults:
+  run:
+    working-directory: src
+
+jobs:
+  publish:
+    name: Publish nuget
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: true
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release
+      - run: dotnet test --no-build -c Release -l trx -r .
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: test-results
+          path: src/*.trx
+      - run: dotnet pack --no-build -c Release -o .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: packages
+          path: src/*nupkg
+      - run: dotnet nuget push *.nupkg -s nuget.org -k ${{secrets.NUGET_API_KEY}} --skip-duplicate
